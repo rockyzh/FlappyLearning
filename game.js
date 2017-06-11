@@ -22,8 +22,9 @@
 	window.setZeroTimeout = setZeroTimeout;
 })();
 
-var Neuvol;
-var game;
+var game_ai;
+var game_human;
+
 var FPS = 60;
 var maxScore=0;
 
@@ -121,22 +122,21 @@ Pipe.prototype.isOut = function(){
 	}
 }
 
-var Game = function(){
+var Game = function(canvas){
 	this.pipes = [];
 	this.birds = [];
 	this.score = 0;
-	this.canvas = document.querySelector("#flappy");
+	this.canvas = canvas;
 	this.ctx = this.canvas.getContext("2d");
 	this.width = this.canvas.width;
 	this.height = this.canvas.height;
 	this.spawnInterval = 90;
 	this.interval = 0;
-	this.gen = [];
 	this.alives = 0;
-	this.generation = 0;
 	this.backgroundSpeed = 0.5;
 	this.backgroundx = 0;
 	this.maxScore = 0;
+	this.generation = 0;
 }
 
 Game.prototype.start = function(){
@@ -145,13 +145,14 @@ Game.prototype.start = function(){
 	this.pipes = [];
 	this.birds = [];
 
-	this.gen = Neuvol.nextGeneration();
-	for(var i in this.gen){
-		var b = new Bird();
-		this.birds.push(b)
-	}
-	this.generation++;
-	this.alives = this.birds.length;
+}
+
+Game.prototype.updateBird = function(index, nextHoll) {
+
+}
+
+Game.prototype.birdDead = function(index) {
+
 }
 
 Game.prototype.update = function(){
@@ -166,31 +167,25 @@ Game.prototype.update = function(){
 		}
 	}
 
+	///
 	for(var i in this.birds){
 		if(this.birds[i].alive){
-
-			var inputs = [
-			this.birds[i].y / this.height,
-			nextHoll
-			];
-
-			var res = this.gen[i].compute(inputs);
-			if(res > 0.5){
-				this.birds[i].flap();
-			}
+			this.updateBird(i, nextHoll);
 
 			this.birds[i].update();
 			if(this.birds[i].isDead(this.height, this.pipes)){
 				this.birds[i].alive = false;
 				this.alives--;
 				//console.log(this.alives);
-				Neuvol.networkScore(this.gen[i], this.score);
+				this.birdDead(i);
+
 				if(this.isItEnd()){
 					this.start();
 				}
 			}
 		}
 	}
+	///
 
 	for(var i = 0; i < this.pipes.length; i++){
 		this.pipes[i].update();
@@ -269,7 +264,6 @@ Game.prototype.display = function(){
 	this.ctx.fillText("Score : "+ this.score, 10, 25);
 	this.ctx.fillText("Max Score : "+this.maxScore, 10, 50);
 	this.ctx.fillText("Generation : "+this.generation, 10, 75);
-	this.ctx.fillText("Alive : "+this.alives+" / "+Neuvol.options.population, 10, 100);
 
 	var self = this;
 	requestAnimationFrame(function(){
@@ -286,20 +280,23 @@ window.onload = function(){
 	}
 
 	var start = function(){
-		Neuvol = new Neuroevolution({
-			population:50,
-			network:[2, [2], 1],
-		});
-		game = new Game();
-		game.start();
-		game.update();
-		game.display();
+		game_ai = new AIGame(document.querySelector("#flappy_ai"));
+		game_ai.start();
+		game_ai.update();
+		game_ai.display();
 	}
 
+	var startHuman = function() {
+		game_human = new HumanGame(document.querySelector("#flappy_human"));
+		game_human.start();
+		game_human.update();
+		game_human.display();
+	};
 
 	loadImages(sprites, function(imgs){
 		images = imgs;
 		start();
+		startHuman();
 	})
 
 }
