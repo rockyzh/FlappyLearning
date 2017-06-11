@@ -16,11 +16,15 @@ for (var name in Bird.prototype) {
 var HumanGame = function(canvas) {
     Game.bind(this)(canvas);
 
-    canvas.onmousedown = function() {
+    canvas.onmousedown = canvas.ontouchstart = function(e) {
         this.mouseDown = true;
+        e.stopPropagation();
+        e.preventDefault();
     }.bind(this);
-    canvas.onmouseup = function() {
+    canvas.onmouseup = canvas.ontouchend = function(e) {
         this.mouseDown = false;
+        e.stopPropagation();
+        e.preventDefault();
     }.bind(this);
 }
 
